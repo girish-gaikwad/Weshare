@@ -1,0 +1,90 @@
+.my-masonry-grid {
+    display: flex;
+    margin-left: -30px; /* Adjust the gap between columns */
+    width: auto;
+  }
+  
+  .my-masonry-grid_column {
+    padding-left: 30px; /* Adjust the gap between columns */
+    background-clip: padding-box;
+  }
+  
+  .photo-item {
+    position: relative;
+    margin-bottom: 30px;
+    cursor: pointer;
+    overflow: hidden;
+  }
+  
+  .photo-item img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  
+  .photo-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+  }
+  
+  .photo-item:hover .photo-info {
+    opacity: 1;
+  }
+  
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    position: relative;
+    max-width: 80%;
+    max-height: 80%;
+    overflow: auto;
+  }
+  
+  .modal-content img {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  .modal-actions {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 10px;
+  }
+  
+  .modal-actions button {
+    padding: 10px 20px;
+    border: none;
+    background: #007bff;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease-in-out;
+  }
+  
+  .modal-actions button:hover {
+    background: #0056b3;
+  }
+  

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hyper Changing Text Animation</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.2/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    /* Custom animation for hyper changing text */
+    .text-hover-animate {
+      font-size: 1.5rem; /* Adjust the size as needed */
+      transition: color 0.3s ease, transform 0.3s ease;
+    }
+    .text-hover-animate:hover {
+      color: #ff6347; /* Change to your desired hover color */
+      transform: scale(1.2); /* Optional: Enlarge the text on hover */
+    }
+  </style>
+</head>
+<body class="p-10">
+  <p>
+    Hover over this <span class="text-hover-animate">hyper changing text</span> to see the animation.
+  </p>
+</body>
+</html>
