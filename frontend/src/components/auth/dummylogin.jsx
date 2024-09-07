@@ -1,14 +1,16 @@
 import React, { useState } from "react";
 import { toast } from "react-toastify";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaEye, FaRegEyeSlash } from "react-icons/fa6";
-import { FaSpinner } from "react-icons/fa"; // Import spinner icon
+import { FaSpinner } from "react-icons/fa";
+import { useAuthStore } from "../../zustand/AuthStore"; // Import zustand store
 
 const LoginScreen = () => {
-  const [isloading, setisloading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // New state for password visibility
+  const { login, isLoading, error,user } = useAuthStore(); // Get login and state from the store
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+
+  console.log(user)
 
   const [formData, setFormData] = useState({
     email: "",
@@ -25,60 +27,25 @@ const LoginScreen = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    setisloading(true); // Show loading spinner
-
-    console.log(formData);
-
-    try {
-      const response = await axios.post(
-        "http://localhost:8080/api/auth/login",
-        formData,
-        { withCredentials: true },
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-          credentials: "include", // Include credentials (cookies)
-        }
-      );
-      toast.success("Login successful:", response.data);
-      setisloading(false);
-      navigate("/Weshare");
-    } catch (error) {
-      toast.error(error.response.data.message);
-      console.error("Error logging in:", error.message);
-      setisloading(false);
-    }
+    await login(formData.email, formData.password,navigate); // Use the login action from the store
   };
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
-  const isFormValid = formData.email && formData.password; // Check if both fields are filled
+  const isFormValid = formData.email && formData.password;
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-4xl flex flex-col md:flex-row bg-white shadow-xl rounded-lg overflow-hidden">
         {/* Left side (Image + User Info) */}
-        <div
-          className="w-full md:w-1/2 relative bg-cover bg-center h-64 md:h-auto rounded-t-lg md:rounded-l-lg md:rounded-tr-none"
-          style={{ backgroundImage: `url('path/to/your/image.jpg')` }}
-        >
+        <div className="w-full md:w-1/2 relative bg-cover bg-center h-64 md:h-auto rounded-t-lg md:rounded-l-lg md:rounded-tr-none" style={{ backgroundImage: `url('path/to/your/image.jpg')` }}>
           <div className="absolute top-0 left-0 w-full h-full bg-black opacity-95">
-            <img
-              src="/images/1.png"
-              alt="User Avatar"
-              className="h-full object-cover hidden md:block"
-            />
+            <img src="/images/1.png" alt="User Avatar" className="h-full object-cover hidden md:block" />
           </div>
           <div className="absolute bottom-4 left-4 text-white z-10 flex items-center space-x-4">
-            <img
-              src="https://randomuser.me/api/portraits/men/32.jpg"
-              alt="User Avatar"
-              className="w-12 h-12 rounded-full border-2 border-white"
-            />
+            <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="User Avatar" className="w-12 h-12 rounded-full border-2 border-white" />
             <div>
               <h3 className="font-semibold">Andrew.ui</h3>
               <p className="text-sm">UI & Illustration</p>
@@ -104,7 +71,7 @@ const LoginScreen = () => {
             </div>
             <div className="mb-4 relative">
               <input
-                type={showPassword ? "text" : "password"} // Conditionally change input type
+                type={showPassword ? "text" : "password"}
                 name="password"
                 placeholder="Password"
                 value={formData.password}
@@ -120,23 +87,18 @@ const LoginScreen = () => {
               </button>
             </div>
             <div className="flex justify-between items-center mb-6">
-              <a href="/" className="text-sm text-red-500 hover:underline">
+
+              <Link to="/forgot-password" className="text-sm text-red-500 hover:underline"> 
                 Forgot password?
-              </a>
+              </Link>
             </div>
 
             <button
               type="submit"
-              disabled={!isFormValid || isloading} // Disable if form is invalid or loading
-              className={`w-full bg-red-500 text-white p-3 rounded-md hover:bg-red-600 ${
-                (!isFormValid || isloading) && "opacity-50 cursor-not-allowed"
-              }`}
+              disabled={!isFormValid || isLoading}
+              className={`w-full bg-red-500 text-white p-3 rounded-md hover:bg-red-600 ${(!isFormValid || isLoading) && "opacity-50 cursor-not-allowed"}`}
             >
-              {isloading ? (
-                <FaSpinner className="animate-spin mx-auto" /> // Show spinner during loading
-              ) : (
-                "Login"
-              )}
+              {isLoading ? <FaSpinner className="animate-spin mx-auto" /> : "Login"}
             </button>
 
             <div className="my-6 text-center text-gray-400">or</div>
@@ -157,10 +119,23 @@ const LoginScreen = () => {
           <div className="mt-6 text-center">
             <p className="text-gray-600">
               Don't have an account?{" "}
-              <a href="/" className="text-blue-500 hover:underline">
+              
+
+              <Link to="/signin" className="text-blue-500 hover:underline">
                 Sign up
-              </a>
+              </Link>
+              
             </p>
+            <p>
+
+            or  
+            </p>
+            <Link to="/verify-Email" className="text-blue-500 hover:underline">
+
+                Verify your Email
+              </Link>
+
+
           </div>
 
           <div className="mt-6 flex justify-center space-x-4">

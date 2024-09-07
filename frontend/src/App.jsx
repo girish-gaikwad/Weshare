@@ -31,6 +31,8 @@ import img3 from "/images/1.png";
 import EmailVerification from "./components/auth/emailverification";
 import LoginScreen from "./components/auth/dummylogin";
 import SignScreen from "./components/auth/dummysignin";
+import ForgotPasswordPage from "./components/auth/ForgotPassword";
+import ResetPasswordPage from "./components/auth/RestPassword";
 
 function App() {
   const photoData = [
@@ -81,17 +83,24 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Navigate to="/login" />} />
-          <Route path="/login" element={<LOGIN />} />
-          <Route path="/signup" element={<SIGNUP />} />
+
+          {/* <Route path="/Vip-login" element={<LOGIN />} />
+          <Route path="/Vip-signin" element={<SIGNUP />} /> */}
 
           <Route path="/verify-email" element={<EmailVerification />} />
-          <Route path="/link" element={<LoginScreen />} />
-          <Route path="/link2" element={<SignScreen />} />
+          <Route path="/login" element={<LoginScreen />} />
+          <Route path="/signin" element={<SignScreen />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route
+            path="/reset-password/:token"
+            element={<ResetPasswordPage />}
+          />
 
           <Route
             path="/Weshare/*"
             element={
               <div className="w-screen h-screen flex-col">
+
                 <NAVBAR
                   theme={theme}
                   setTheme={setTheme}
@@ -100,7 +109,6 @@ function App() {
 
                 <div className="yo flex mt-3  gap-2 pl-3 pr-3 ">
                   <div
-                    // ref={sidebarRef}
                     className={`sidebar lg:w-[15%]  lg:flex flex-col z-30 lg:relative absolute ${
                       sidebarOpen ? "left-0" : "left-[-100%]"
                     } lg:left-0 gap-2 items-center transition-all duration-300`}
@@ -128,7 +136,9 @@ function App() {
                         {/* <Route path="/" element={<Home />} /> */}
                       </Routes>
                     </div>
-                    <div className="helperside w-[23%]   rounded-xl flex flex-col gap-2 p-0 m-0 ">
+
+                    <div className="helperside w-[23%] rounded-xl flex flex-col gap-2 p-0 m-0 hidden xl:flex xl:w-[23%] 2xl:flex 2xl:w-[23%]">
+                      {/* <div className="helperside w-[23%]   rounded-xl flex flex-col gap-2 p-0 m-0 "> */}
                       <Routes>
                         <Route path="feed" element={<FEEDHELPER />} />
                         <Route path="reels" element={<REELSHELPER />} />

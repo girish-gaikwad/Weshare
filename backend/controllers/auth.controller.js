@@ -250,39 +250,54 @@ export const logout = async (req, res) => {
 export const forgotPassword = async (req, res) => {
   const { email } = req.body;
   try {
+    // Check if the user with the provided email exists
     const user = await User.findOne({ email });
     if (!user) {
-      res.status(401).json({
+      return res.status(401).json({
         success: false,
-        message: "their is no account connected to this Email",
+        message: "There is no account connected to this email",
       });
     }
 
-    //  Generate the restpassword Token
-
+    // Generate a reset password token and its expiry time
     const resetToken = crypto.randomBytes(20).toString("hex");
-    const resetTokenExpriesAt = Date.now() + 1 * 60 * 60 * 1000; //1 hrs
+    const resetTokenExpiresAt = Date.now() + 1 * 60 * 60 * 1000; // 1 hour expiry
 
+    // Save the reset token and expiry time to the user's account
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpiresAt = resetTokenExpiresAt;
     await user.save();
 
-    // send a rest email
-
+    // Send a password reset email with the token
     await sendPasswordRestEmail(
       user.email,
-      `${process.env.CLIENT_URL}/forgot-password/${resetToken}`
+      `${process.env.CLIENT_URL}/reset-password/${resetToken}`
     );
 
-    user.resetPasswordToken = resetToken;
-    user.resetPasswordExpiresAt = resetTokenExpriesAt;
+    // Send success response
+    return res.status(200).json({
+      success: true,
+      message: "Password reset link has been sent to your email",
+    });
 
-    await user.save();
-  } catch (error) {}
+  } catch (error) {
+    // Catch any errors and return a 500 status code with an error message
+    console.error("Error in forgotPassword function:", error); // Log the error for debugging
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while trying to send the reset password link. Please try again later.",
+      error: error.message, // Optional: Include the error message for debugging
+    });
+  }
 };
+
 
 export const resetPassword = async (req, res) => {
   try {
     const { token } = req.params;
     const { password } = req.body;
+
+    console.log("token",token, password);
 
     // Find the user with the valid reset token and check the expiry date
     const user = await User.findOne({

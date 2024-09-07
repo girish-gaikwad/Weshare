@@ -1,26 +1,15 @@
 import React, { useState } from "react";
-import { CheckCircleIcon } from "@heroicons/react/solid"; // You can use this if you have Heroicons
+import { CheckCircleIcon } from "@heroicons/react/solid";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import defaultProfile from "/images/default_profile.png";
 import { toast } from "react-toastify";
-import axios from "axios";
-import { useNavigate } from "react-router-dom"; 
+import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../../zustand/AuthStore"; // Import the Zustand store
+import { FaSpinner } from "react-icons/fa6";
 
 const SignUpPage = () => {
-  const [isloading, setisloading] = useState(false);
-  const [image, setImage] = useState(defaultProfile); // Default profile image
-  const [isChecked, setIsChecked] = useState(false); // State for the checkbox
-  const navigate = useNavigate(); // Initialize the navigate function
-
-  // Handle profile pic upload and display preview
-  const loadFile = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setImage(URL.createObjectURL(file)); // Temporarily display the image
-      setFormData({ ...formData, profilePic: file }); // Update formData with the file
-    }
-  };
-
+  const [image, setImage] = useState(defaultProfile);
+  const [isChecked, setIsChecked] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     userName: "",
@@ -30,50 +19,61 @@ const SignUpPage = () => {
     password: "",
     profilePic: null,
   });
-  // Validation functions
-  const isFullNameValid = formData.name.length > 0;
-  const isUserNameValid = formData.userName.length > 0;
-  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email);
-  const isPasswordValid = formData.password.length > 6;
+
+  const [validFields, setValidFields] = useState({
+    name: false,
+    userName: false,
+    gender: false,
+    dateOfBirth: false,
+    email: false,
+    password: false,
+  });
+
+  const navigate = useNavigate();
+  const { signup, isLoading } = useAuthStore(); // Access signup function from Zustand store
+
+  const validateField = (name, value) => {
+    switch (name) {
+      case "name":
+        return /^[a-zA-Z\s]{2,}$/.test(value);
+      case "userName":
+        return /^[a-zA-Z0-9_]{3,15}$/.test(value);
+      case "gender":
+        return value !== "";
+      case "dateOfBirth":
+        return value !== "";
+      case "email":
+        return /^\S+@\S+\.\S+$/.test(value);
+      case "password":
+        // return /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/.test(value); //for complex passwords
+        return value.length > 6; // Updated validation to check only length
+
+      default:
+        return false;
+    }
+  };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    setValidFields({ ...validFields, [name]: validateField(name, value) });
+  };
+
+  const loadFile = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setImage(URL.createObjectURL(file));
+      setFormData({ ...formData, profilePic: file });
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    setisloading(true); // Show loading spinner
-    const data = new FormData();
-    data.append("name", formData.name);
-    data.append("userName", formData.userName);
-    data.append("gender", formData.gender);
-    data.append("dateOfBirth", formData.dateOfBirth);
-    data.append("email", formData.email);
-    data.append("password", formData.password);
-    data.append("profilePic", formData.profilePic);
-
-    try {
-      const response = await axios.post(
-        "http://localhost:8080/api/auth/signup",
-        data,
-        { withCredentials: true },
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-          credentials: "include", // Include credentials (cookies)
-        }
-      );
-      toast.success("Signup successful:", response.data);
-      setisloading(false);
-      navigate("/verify-email");
-
-    } catch (error) {
-      toast.error(error.response.data.message);
-
-      console.error("Error signing up:", error);
-      setisloading(false);
+    const isValid = Object.keys(validFields).every((key) => validFields[key]);
+    if (isValid && isChecked) {
+      signup(formData, navigate); // Use signup from the Zustand store
+    } else {
+      toast.error("Please fill all fields");
     }
   };
 
@@ -96,7 +96,7 @@ const SignUpPage = () => {
           </h2>
 
           <form onSubmit={handleSubmit}>
-            {/* Profile Picture Upload */}
+            {/* Profile Pic Upload */}
             <div className="mb-6 flex justify-center">
               <label htmlFor="profilePic" className="cursor-pointer">
                 <div className="relative">
@@ -128,10 +128,11 @@ const SignUpPage = () => {
                 type="text"
                 placeholder="Full name"
                 name="name"
+                value={formData.name}
                 onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full p-3 border ${validFields.name ? 'border-green-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
               />
-              {isFullNameValid && (
+              {validFields.name && (
                 <CheckCircleIcon className="w-6 h-6 text-green-500 absolute top-3 right-3" />
               )}
             </div>
@@ -142,10 +143,45 @@ const SignUpPage = () => {
                 type="text"
                 placeholder="Username"
                 name="userName"
+                value={formData.userName}
                 onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full p-3 border ${validFields.userName ? 'border-green-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
               />
-              {isUserNameValid && (
+              {validFields.userName && (
+                <CheckCircleIcon className="w-6 h-6 text-green-500 absolute top-3 right-3" />
+              )}
+            </div>
+
+            {/* Gender */}
+            <div className="mb-4 relative">
+              <select
+                name="gender"
+                value={formData.gender}
+                onChange={handleChange}
+                className={`w-full p-3 border ${validFields.gender ? 'border-green-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              >
+                <option value="" disabled>
+                  Select Gender
+                </option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+              {validFields.gender && (
+                <CheckCircleIcon className="w-6 h-6 text-green-500 absolute top-3 right-3" />
+              )}
+            </div>
+
+            {/* Date of Birth */}
+            <div className="mb-4 relative">
+              <input
+                type="date"
+                name="dateOfBirth"
+                value={formData.dateOfBirth}
+                onChange={handleChange}
+                className={`w-full p-3 border ${validFields.dateOfBirth ? 'border-green-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              />
+              {validFields.dateOfBirth && (
                 <CheckCircleIcon className="w-6 h-6 text-green-500 absolute top-3 right-3" />
               )}
             </div>
@@ -156,10 +192,11 @@ const SignUpPage = () => {
                 type="email"
                 placeholder="Email"
                 name="email"
+                value={formData.email}
                 onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full p-3 border ${validFields.email ? 'border-green-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
               />
-              {isEmailValid && (
+              {validFields.email && (
                 <CheckCircleIcon className="w-6 h-6 text-green-500 absolute top-3 right-3" />
               )}
             </div>
@@ -168,114 +205,38 @@ const SignUpPage = () => {
             <div className="mb-4 relative">
               <input
                 type="password"
-                placeholder="Password (min. 6 characters)"
+                placeholder="Password"
                 name="password"
+                value={formData.password}
                 onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full p-3 border ${validFields.password ? 'border-green-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
               />
-              {isPasswordValid && (
+              {validFields.password && (
                 <CheckCircleIcon className="w-6 h-6 text-green-500 absolute top-3 right-3" />
               )}
             </div>
 
-            {/* Gender */}
-            <div className="flex">
-              <div className="mb-4 relative flex w-[100%]">
-                
-                
-                <select
-                  name="gender"
-                  onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                  >
-                  <option value="">Select Gender ⚥</option>
-                  <option value="Male">Male ♂️</option>
-                  <option value="Female">Female ♀️</option>
-                  <option value="Other">Other</option>
-                </select>
-                
-                
-                {formData.gender && (
-                  <CheckCircleIcon className="w-6 h-6 text-green-500 absolute top-3 right-3" />
-                )}
-              </div>
-              
-              <div className="mb-4 relative flex w-[100%]">
+            {/* Checkbox */}
+            <div className="mb-6">
+              <label className="flex items-center">
                 <input
-                  type="date"
-                  placeholder="Date of Birth"
-                  name="dateOfBirth"
-                  onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  type="checkbox"
+                  checked={isChecked}
+                  onChange={(e) => setIsChecked(e.target.checked)}
+                  className="mr-2"
                 />
-                {formData.dateOfBirth && (
-                  <CheckCircleIcon className="w-6 h-6 text-green-500 absolute top-3 right-3" />
-                )}
-              </div>
+                <span className="text-gray-700">I agree to the Terms and Conditions</span>
+              </label>
             </div>
 
-         
-
-            {/* Agree to Terms */}
-            <div className="mb-4 flex items-center">
-              <input
-                type="checkbox"
-                className="mr-2"
-                onChange={(e) => setIsChecked(e.target.checked)} // Update checkbox state
-              />
-              <span>
-                I agree with the website's{" "}
-                <a href="#" className="text-blue-500 underline">
-                  terms and conditions
-                </a>
-              </span>
-            </div>
-
-            {/* Sign Up Button */}
-
+            {/* Submit Button */}
             <button
               type="submit"
-              disabled={!isChecked || isloading } 
-              className={`w-full p-3 rounded-md ${
-                !isChecked || isloading
-                  ? "bg-gray-400 text-gray-700 cursor-not-allowed"
-                  : "bg-red-500 text-white hover:bg-red-600"
-              }`}
+              className="w-full p-3 text-white bg-blue-500 rounded-md hover:bg-blue-600 focus:outline-none"
+              disabled={isLoading} // Disable button during loading
             >
-{isloading ? (
-                <div className="flex justify-center items-center">
-                  <svg
-                    className="animate-spin h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 0 1 8-8v8H4z"
-                    ></path>
-                  </svg>
-                </div>
-              ) : (
-                "Sign Up"
-              )}            </button>
-
-            {/* Sign In Link */}
-            <p className="text-center mt-4">
-              Already a member?{" "}
-              <a href="#" className="text-blue-500 underline">
-                Sign in
-              </a>
-            </p>
+              {isLoading ? <FaSpinner className="animate-spin mx-auto" /> : "Sign Up"}
+            </button>
           </form>
         </div>
       </div>
